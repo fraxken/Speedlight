@@ -13,3 +13,10 @@ NodeJS ES7 framework on top of µWS
 
 # Proposals 
 
+## Needs
+
+- Middleware / Bundle class
+- Router 
+- Clustering ( check  µWS auto-scalability ).
+
+## List
