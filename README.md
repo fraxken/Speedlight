@@ -16,8 +16,10 @@ NodeJS ES7 framework on top of µWS
 ## Needs
 
 - Middleware / Bundle class
-- Router 
+- Router (MVC & Rest)
 - Clustering ( check  µWS auto-scalability ).
+- Session ( Local & Redis ) 
+- WebSocket interface.
 
 ## List
 
