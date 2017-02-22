@@ -13,9 +13,6 @@ NodeJS ES7 framework on top of µWS
 
 # Proposals 
 
-- [Framework structure components](https://github.com/ES-Community/Speedlight/wiki/Wip--fraxken)
-- [MVC Router](https://github.com/ES-Community/Speedlight/wiki/Wip-Object-Oriented-Router)
-
 ## Needs
 
 - Middleware / Bundle class
@@ -23,3 +20,6 @@ NodeJS ES7 framework on top of µWS
 - Clustering ( check  µWS auto-scalability ).
 
 ## List
+
+- [Framework structure components](https://github.com/ES-Community/Speedlight/wiki/Wip--fraxken)
+- [MVC Router](https://github.com/ES-Community/Speedlight/wiki/Wip-Object-Oriented-Router)
