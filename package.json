@@ -1,0 +1,11 @@
+{
+  "name": "speedlight",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js --harmony"
+  },
+  "dependencies": {
+    "async": "^2.1.5",
+    "uws": "^0.13.0"
+  }
+}

@@ -1,141 +1,77 @@
-const events = require('events');
+// NodeJS - Core modules
+const events    = require('events');
+const cluster   = require('cluster');
+const os        = require('os');
+
+// Dependencies modules
+const uws       = require('uws');
+const async     = require('async');
+
+// Internal modules
+const utils     = require('./libs/utils.js');
+const Package   = require('./libs/package.js');
+const Router    = require('./libs/router.js');
+
+// Global variables
+const nbCPUS    = os.cpus().length;
 
 /*
- * Server class
+ * Server interfaces
  */ 
 const IServerListen = {
     port: 3000,
-    ip: "0.0.0.0"
+    ip: "0.0.0.0",
+    nbFork: nbCPUS
 }
 
-const IServerFork = {
-    nbFork: 1,
-    port: 3000,
-    ip: "0.0.0.0"
-}
-
+/*
+ * Server class
+ */
 class Server extends events {
 
     constructor() {
         super();
-        this.fibers = new Map(); 
-        this.fibers.set('global',new Fiber({ name: 'global' }));
+        this.context    = {};
+        this.packages   = {};
     }
 
-    use(fiber) {
-        if(fiber instanceof Fiber) {
-            const parent = fiber.parent;
-            if(parent !== undefined) {
-                console.log(parent);
-            }
-            this.fibers.set(fiber.name,fiber);
+    addPackage(pkg) {
+        if(pkg instanceof Package === false) {
+            throw new TypeError("package argument is not a package");
         }
+        this.packages[pkg.name] = pkg;
     }
 
-    loadNetwork(path) {
+    start(opts) {
+        opts = utils.assignInterface(opts,IServerListen);
+        
+        if (cluster.isMaster) {
+            console.log(`Master ${process.pid} is running`);
 
-    }
-
-    listen(opts) {
-        Object.assign(opts,IServerListen);
-    }
-
-    fork(opts) {
-        Object.assign(opts,IServerFork);
-    }
-
-}
-
-/*
- * Fiber class
- */ 
-const IFiberConstructor = {
-    name: null,
-    inherit: true,
-    parent: null
-}
-
-class Fiber extends events {
-
-    constructor(opts) {
-        super();
-        Object.assign(this,IFiberConstructor,opts);
-        this.childrens = {
-            fibers: new Map(),
-            packages: new Map()
-        };
-        this.connect(new Scope({ name: "data" }));
-    }
-
-    connect(entity) {
-        if(entity instanceof Package) {
-            if( this.childrens.packages.has(entity.name) === true) {
-                throw "Package already connected with this fiber";
+            // Fork workers.
+            for (let i = 0; i < opts.nbFork; i++) {
+                cluster.fork();
             }
-            this[entity.name] = entity;
-            this.childrens.packages.set(entity.name,entity);
-        }
-        else if(entity instanceof Fiber) {
-            if( this.childrens.fibers.has(entity.name) === true) {
-                throw "Fiber already connected with this fiber";
-            }
-            this.childrens.fibers.set(entity.name,entity);
-        }
+
+            cluster.on('exit', (worker, code, signal) => {
+                console.log(`worker ${worker.process.pid} died`);
+            });
+        } 
         else {
-            throw "Invalid entity. Only Package and Fiber are allowed!";
+            this.server = uws.http.createServer( (req,res) => {
+                console.log(`URL Requested << ${req.url} >>`);
+                res.end(Buffer.from('ok'));
+            });
+            this.server.listen(opts.port);
         }
-    }
-
-    unconnect(entity) {
 
     }
 
 }
 
 /*
- * Package class
- */ 
-const IPackageConstructor = {
-    name: null
-}
-
-class Package extends events {
-
-    constructor(opts) {
-        super();
-        Object.assign(this,IPackageConstructor,opts);
-        if(this.name === undefined) {
-            throw "Invalid package name";
-        }
-    }
-
-    connect(fiber) {
-        if(fiber instanceof Fiber) {
-            fiber.connect(this);
-            return true;
-        }
-        return false;
-    }
-
-}
-
-/*
- * Scope package
- */ 
-class Scope extends Package {
-
-    constructor(opts) {
-        super(opts);
-        this.a = "hello world";
-    }
-
-}
-
-/*
- * Exports all
+ * Exports modules
  */ 
 module.exports = {
-    Server,
-    Fiber,
-    Package
+    Server
 }
