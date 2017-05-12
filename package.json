@@ -5,7 +5,7 @@
     "start": "node index.js --harmony"
   },
   "dependencies": {
-    "async": "^2.1.5",
-    "uws": "^0.13.0"
+    "async": "^2.4.0",
+    "uws": "^0.14.5"
   }
 }
