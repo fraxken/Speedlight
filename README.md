@@ -12,7 +12,7 @@ NodeJS ES7 framework on top of µWS
 ## Example 
 
 ```js
-const speedlight = require('./speedlight');
+const speedlight = require('speedlight');
 
 const server = new speedlight.Server();
 

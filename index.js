@@ -1,28 +1,74 @@
-const speedlight = require('./speedlight');
+// NodeJS - Core modules
+const events    = require('events');
+const cluster   = require('cluster');
+const os        = require('os');
 
-const server = new speedlight.Server();
+// Dependencies modules
+const uws       = require('uws');
+const async     = require('async');
 
-class pkgTest extends speedlight.Package {
-    constructor() {
-        super("pkgTest");
-    }
+// Internal modules
+const Utils     = require('./core/utils.js');
+const Package   = require('./core/package.js');
+
+// Global variables
+const nbCPUS    = os.cpus().length;
+
+/*
+ * Server interfaces
+ */ 
+const IServerListen = {
+    port: 3000,
+    ip: "0.0.0.0",
+    nbFork: nbCPUS
 }
 
-const aPkg = new pkgTest();
-aPkg.setVar("bimboum","pro!");
-aPkg.use(async function(ctx) {
-    console.log('match aPkg!');
-    console.log(ctx.bimboum);
-    console.log(ctx.test);
-});
+/*
+ * Server class
+ */
+class Server extends Package {
 
-server.setVar("test","lol");
-server.use(aPkg);
-server.use(async function(ctx) {
-    console.log('match global use!');
-});
+    constructor() {
+        super("Speedlight-server");
+    }
 
-server.start({ 
-    port: 3000,
-    nbFork: 1
-});
+    async _httpRequestHandler(request,response) {
+
+        console.log(`URL Requested << ${request.url} >>`);
+        console.time('handle_http');
+
+        await this.run({ request, response },void 0);
+
+        response.end(Buffer.from('Unmatched routes!'));
+        console.timeEnd('handle_http');
+    }
+
+    start(opts) {
+        opts = Utils.assignInterface(opts,IServerListen);
+
+        if (cluster.isMaster) {
+            console.log(`Master ${process.pid} is running`);
+
+            // Fork workers.
+            for (let i = 0; i < opts.nbFork; i++) {
+                cluster.fork();
+            }
+
+            cluster.on('exit', (worker, code, signal) => {
+                console.log(`worker ${worker.process.pid} died`);
+            });
+        } else {
+            this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
+            this.httpServer.listen(opts.port);
+        }
+    }
+
+}
+
+/*
+ * Exports modules
+ */ 
+module.exports = {
+    Server,
+    Package
+}
