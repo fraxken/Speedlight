@@ -68,9 +68,10 @@ class Package extends events {
 
     _runChildrenPackages(context) {
         return new Promise((resolve,reject) => {
-            each(this.packages,async (pkg,next) => {
-                await pkg.run(void 0,context);
-                next();
+            each(this.packages,(pkg,next) => {
+                pkg.run(void 0,context).then( next ).catch( err => {
+                    next();
+                });
             },(err) => {
                 if(err) {
                     reject(err);
