@@ -8,7 +8,7 @@ const uws       = require('uws');
 const async     = require('async');
 
 // Internal modules
-const utils     = require('./libs/utils.js');
+const Utils     = require('./libs/utils.js');
 const Package   = require('./libs/package.js');
 const Router    = require('./libs/router.js');
 
@@ -27,24 +27,26 @@ const IServerListen = {
 /*
  * Server class
  */
-class Server extends events {
+class Server extends Package {
 
     constructor() {
-        super();
-        this.context    = {};
-        this.packages   = {};
+        super("Speedlight-server");
     }
 
-    addPackage(pkg) {
-        if(pkg instanceof Package === false) {
-            throw new TypeError("package argument is not a package");
-        }
-        this.packages[pkg.name] = pkg;
+    async _httpRequestHandler(request,response) {
+
+        console.log(`URL Requested << ${request.url} >>`);
+        console.time('handle_http');
+
+        await this.run({ request, response },void 0);
+
+        response.end(Buffer.from('Unmatched routes!'));
+        console.timeEnd('handle_http');
     }
 
     start(opts) {
-        opts = utils.assignInterface(opts,IServerListen);
-        
+        opts = Utils.assignInterface(opts,IServerListen);
+
         if (cluster.isMaster) {
             console.log(`Master ${process.pid} is running`);
 
@@ -56,15 +58,10 @@ class Server extends events {
             cluster.on('exit', (worker, code, signal) => {
                 console.log(`worker ${worker.process.pid} died`);
             });
-        } 
-        else {
-            this.server = uws.http.createServer( (req,res) => {
-                console.log(`URL Requested << ${req.url} >>`);
-                res.end(Buffer.from('ok'));
-            });
-            this.server.listen(opts.port);
+        } else {
+            this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
+            this.httpServer.listen(opts.port);
         }
-
     }
 
 }
@@ -73,5 +70,6 @@ class Server extends events {
  * Exports modules
  */ 
 module.exports = {
-    Server
+    Server,
+    Package
 }
