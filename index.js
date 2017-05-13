@@ -19,7 +19,7 @@ const IServerListen = {
 /*
  * Server class
  */
-class Server extends Package {
+class HttpServer extends Package {
 
     constructor(opts) {
         super();
@@ -34,13 +34,13 @@ class Server extends Package {
     }
 
     listen(opts) {
-        if(this.httpServer !== undefined) return;
+        if(this._httpServer !== undefined) return;
         opts = Utils.assignInterface(opts,IServerListen);
         if(opts.port == void 0) {
             throw new Error("Please provide a port to start the http server!");
         }
-        this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
-        this.httpServer.listen(opts.port);
+        this._httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
+        this._httpServer.listen(opts.port);
     }
 
 }
@@ -49,7 +49,7 @@ class Server extends Package {
  * Exports modules
  */ 
 module.exports = {
-    Server,
+    HttpServer,
     Package,
     Router
 }
