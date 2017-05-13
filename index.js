@@ -23,7 +23,7 @@ class Server extends Package {
     constructor(opts) {
         super();
         if(opts != void 0) {
-            this.start(opts);
+            this.listen(opts);
         }
     }
 
@@ -32,7 +32,7 @@ class Server extends Package {
         response.end(Buffer.from('Unmatched routes!'));
     }
 
-    start(opts) {
+    listen(opts) {
         if(this.httpServer !== undefined) return;
         opts = Utils.assignInterface(opts,IServerListen);
         if(opts.port == void 0) {
