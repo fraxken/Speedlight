@@ -108,8 +108,12 @@ class Package extends events {
             Object.assign(reqContext,middlewareContext);
         }
 
-        await this._executeCallbacks(reqContext);
-        await this._runChildrenPackages(reqContext);
+        if(this.callbacks.length > 0) {
+            await this._executeCallbacks(reqContext);
+        }
+        if(this.packages.length > 0) {
+            await this._runChildrenPackages(reqContext);
+        }
     }
 
 }
