@@ -1,7 +1,5 @@
 // NodeJS - Core modules
 const events    = require('events');
-const cluster   = require('cluster');
-const os        = require('os');
 
 // Dependencies modules
 const uws       = require('uws');
@@ -11,16 +9,11 @@ const async     = require('async');
 const Utils     = require('./core/utils.js');
 const Package   = require('./core/package.js');
 
-// Global variables
-const nbCPUS    = os.cpus().length;
-
 /*
  * Server interfaces
  */ 
 const IServerListen = {
-    port: 3000,
-    ip: "0.0.0.0",
-    nbFork: nbCPUS
+    port: 3000
 }
 
 /*
@@ -46,21 +39,8 @@ class Server extends Package {
     start(opts) {
         opts = Utils.assignInterface(opts,IServerListen);
 
-        if (cluster.isMaster) {
-            console.log(`Master ${process.pid} is running`);
-
-            // Fork workers.
-            for (let i = 0; i < opts.nbFork; i++) {
-                cluster.fork();
-            }
-
-            cluster.on('exit', (worker, code, signal) => {
-                console.log(`worker ${worker.process.pid} died`);
-            });
-        } else {
-            this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
-            this.httpServer.listen(opts.port);
-        }
+        this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
+        this.httpServer.listen(opts.port);
     }
 
 }
