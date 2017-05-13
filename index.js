@@ -7,6 +7,7 @@ const uws       = require('uws');
 // Internal modules
 const Utils     = require('./core/utils.js');
 const Package   = require('./core/package.js');
+const Router    = require('./core/router.js');
 
 /*
  * Server interfaces
@@ -49,5 +50,6 @@ class Server extends Package {
  */ 
 module.exports = {
     Server,
-    Package
+    Package,
+    Router
 }
