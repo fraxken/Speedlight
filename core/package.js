@@ -1,6 +1,10 @@
 const events    = require('events');
 const { each }  = require('async');
 
+/*
+ * Package class 
+ * Middleware component with his own Context, Callback(s) and Package(s).
+ */
 class Package extends events {
 
     constructor() {
@@ -10,10 +14,16 @@ class Package extends events {
         this.packages   = [];
     }
 
-    getContext() {
+    /*
+     * 
+     */
+    copyContext() {
         return Object.assign({},this.context);
     }
 
+    /*
+     * set a new context variable!
+     */
     setVar(strName,value) {
         if(typeof strName !== "string") {
             throw new TypeError("strName have to be a String");
@@ -21,16 +31,25 @@ class Package extends events {
         this.context[strName] = value;
     }
 
+    /*
+     * get a context variable!
+     */
     getVar(strName) {
         return Reflect.has(this.context,strName) ? Reflect.get(this.context,strName) : null;
     }
 
+    /*
+     * delete a context variable!
+     */
     delVar(strName) {
         if(Reflect.has(this.context,strName)) {
             Reflect.deleteProperty(this.context,strName);
         }
     }
 
+    /*
+     * Use a new middleware element.
+     */
     use(objMiddleware) {
         if(objMiddleware instanceof Package) {
             this.packages.push(objMiddleware);
@@ -43,6 +62,9 @@ class Package extends events {
         }
     }
 
+    /*
+     * execute package callback(s).
+     */
     async _executeCallbacks(ctx) {
         var i = 0,len = this.callbacks.length;
         for(;i<len;i++) {
@@ -55,6 +77,9 @@ class Package extends events {
         }
     }
 
+    /*
+     * Run middleware execution for every package(s) attached.
+     */
     _runChildrenPackages(context) {
         return new Promise((resolve,reject) => {
             each(this.packages,(pkg,next) => {
@@ -71,8 +96,12 @@ class Package extends events {
         })
     }
 
+    /*
+     * Run middleware execution
+     */
     async run(middlewareContext,tContext) {
-        let reqContext = tContext != void 0 ? Object.assign(tContext,this.getContext()) : this.getContext();
+        const selfCtx   = this.copyContext();
+        let reqContext  = tContext != void 0 ? Object.assign(tContext,selfCtx) : selfCtx;
 
         if(middlewareContext != void 0) {
             Object.assign(reqContext,middlewareContext);
