@@ -13,11 +13,6 @@ class Package extends events {
         this.context    = {};
         this.callbacks  = [];
         this.packages   = [];
-        this.freezed    = false;
-    }
-
-    freezeContext() {
-        this.freezed = true;
     }
 
     getContext() {
@@ -25,7 +20,6 @@ class Package extends events {
     }
 
     setVar(strName,value) {
-        if(this.freezed === true) return;
         if(typeof strName !== "string") {
             throw new TypeError("strName have to be a String");
         }
@@ -37,7 +31,6 @@ class Package extends events {
     }
 
     delVar(strName) {
-        if(this.freezed === true) return;
         if(Reflect.has(this.context,strName)) {
             Reflect.deleteProperty(this.context,strName);
         }
