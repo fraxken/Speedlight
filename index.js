@@ -1,5 +1,5 @@
 // NodeJS - Core modules
-const events    = require('events');
+const Emitter   = require('events');
 
 // Dependencies modules
 const uws       = require('uws');
@@ -12,12 +12,12 @@ const Router    = require('./core/router.js');
 /*
  * Server interfaces
  */ 
-const IServerListen = {
+const IHTTPServerListen = {
     port: void 0
 }
 
 /*
- * Server class
+ * Server server
  */
 class HttpServer extends Package {
 
@@ -35,14 +35,45 @@ class HttpServer extends Package {
 
     listen(opts) {
         if(this._httpServer !== undefined) return;
-        opts = Utils.assignInterface(opts,IServerListen);
+        opts = Utils.assignInterface(opts,IHTTPServerListen);
         if(opts.port == void 0) {
-            throw new Error("Please provide a port to start the http server!");
+            throw new Error("Please provide a port to start the Http server!");
         }
         this._httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
         this._httpServer.listen(opts.port);
     }
 
+}
+
+/*
+ * WebSocket interface
+ */
+const IWSSConstructor = {
+    port: void 0
+}
+
+/*
+ * WebSocket server
+ */
+class WebSocketServer extends Emitter {
+
+    constructor(opts) {
+        super();
+        opts = Utils.assignInterface(opts,IWSSConstructor);
+        if(opts.port == void 0) {
+            throw new Error("Please provide a port to start the WebSocket server!");
+        }
+        this._WSServer = new uws.Server(opts);
+        this._WSServer.on('connection',(ws) => {
+            this.emit('connection',ws);
+            ws.on('message',this.onMessage.bind(this));
+        });
+    }
+
+    onMessage(message) {
+        this.emit('')
+    }
+    
 }
 
 /*
