@@ -44,7 +44,8 @@ class Package extends events {
     }
 
     async _executeCallbacks(ctx) {
-        for(let i = 0,len = this.callbacks.length;i<len;i++) {
+        var i = 0,len = this.callbacks.length;
+        for(;i<len;i++) {
             try {
                 await this.callbacks[i](ctx);
             }
