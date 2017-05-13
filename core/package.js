@@ -52,6 +52,7 @@ class Package extends events {
      */
     use(objMiddleware) {
         if(objMiddleware instanceof Package) {
+            this.emit('use',objMiddleware);
             this.packages.push(objMiddleware);
         }
         else if(typeof objMiddleware === 'function') {
