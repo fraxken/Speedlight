@@ -40,7 +40,7 @@ class Router extends Package {
         this.basePath = strPath+this.basePath;
     }
 
-    registerRoute(strMethod,asyncMethod) {
+    handleMethod(strMethod,asyncMethod) {
         if(Reflect.has(this._routes,strMethod) === false) {
             throw new Error('strMethod have to be equal to : GET|POST|PUT');
         }
