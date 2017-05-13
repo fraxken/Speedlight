@@ -9,42 +9,16 @@ class Package extends events {
 
     constructor() {
         super();
-        this.context    = {};
-        this.callbacks  = [];
-        this.packages   = [];
+        this.context     = {};
+        this._callbacks  = [];
+        this._packages   = [];
     }
 
     /*
-     * 
+     * Copy package context
      */
     copyContext() {
         return Object.assign({},this.context);
-    }
-
-    /*
-     * set a new context variable!
-     */
-    setVar(strName,value) {
-        if(typeof strName !== "string") {
-            throw new TypeError("strName have to be a String");
-        }
-        this.context[strName] = value;
-    }
-
-    /*
-     * get a context variable!
-     */
-    getVar(strName) {
-        return Reflect.has(this.context,strName) ? Reflect.get(this.context,strName) : null;
-    }
-
-    /*
-     * delete a context variable!
-     */
-    delVar(strName) {
-        if(Reflect.has(this.context,strName)) {
-            Reflect.deleteProperty(this.context,strName);
-        }
     }
 
     /*
@@ -53,10 +27,10 @@ class Package extends events {
     use(objMiddleware) {
         if(objMiddleware instanceof Package) {
             this.emit('use',objMiddleware);
-            this.packages.push(objMiddleware);
+            this._packages.push(objMiddleware);
         }
         else if(typeof objMiddleware === 'function') {
-            this.callbacks.push(objMiddleware);
+            this._callbacks.push(objMiddleware);
         }
         else {
             throw new TypeError("Unsupported middleware type for objMiddleware");
@@ -67,10 +41,10 @@ class Package extends events {
      * execute package callback(s).
      */
     async _executeCallbacks(ctx) {
-        var i = 0,len = this.callbacks.length;
+        var i = 0,len = this._callbacks.length;
         for(;i<len;i++) {
             try {
-                await this.callbacks[i](ctx);
+                await this._callbacks[i](ctx);
             }
             catch(Exception) {
                 throw Exception;
@@ -83,7 +57,7 @@ class Package extends events {
      */
     _runChildrenPackages(context) {
         return new Promise((resolve,reject) => {
-            each(this.packages,(pkg,next) => {
+            each(this._packages,(pkg,next) => {
                 pkg.run(void 0,context).then( next ).catch( err => {
                     next();
                 });
@@ -108,10 +82,10 @@ class Package extends events {
             Object.assign(reqContext,middlewareContext);
         }
 
-        if(this.callbacks.length > 0) {
+        if(this._callbacks.length > 0) {
             await this._executeCallbacks(reqContext);
         }
-        if(this.packages.length > 0) {
+        if(this._packages.length > 0) {
             await this._runChildrenPackages(reqContext);
         }
     }
