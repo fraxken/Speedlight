@@ -25,19 +25,12 @@ class Server extends Package {
     }
 
     async _httpRequestHandler(request,response) {
-
-        console.log(`URL Requested << ${request.url} >>`);
-        console.time('handle_http');
-
         await this.run({ request, response },void 0);
-
         response.end(Buffer.from('Unmatched routes!'));
-        console.timeEnd('handle_http');
     }
 
     start(opts) {
         opts = Utils.assignInterface(opts,IServerListen);
-
         this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
         this.httpServer.listen(opts.port);
     }
