@@ -3,7 +3,6 @@ const events    = require('events');
 
 // Dependencies modules
 const uws       = require('uws');
-const async     = require('async');
 
 // Internal modules
 const Utils     = require('./core/utils.js');
