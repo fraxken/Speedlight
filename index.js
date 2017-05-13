@@ -12,7 +12,7 @@ const Package   = require('./core/package.js');
  * Server interfaces
  */ 
 const IServerListen = {
-    port: 3000
+    port: void 0
 }
 
 /*
@@ -20,8 +20,11 @@ const IServerListen = {
  */
 class Server extends Package {
 
-    constructor() {
+    constructor(opts) {
         super();
+        if(opts != void 0) {
+            this.start(opts);
+        }
     }
 
     async _httpRequestHandler(request,response) {
@@ -30,7 +33,11 @@ class Server extends Package {
     }
 
     start(opts) {
+        if(this.httpServer !== undefined) return;
         opts = Utils.assignInterface(opts,IServerListen);
+        if(opts.port == void 0) {
+            throw new Error("Please provide a port to start the http server!");
+        }
         this.httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
         this.httpServer.listen(opts.port);
     }
