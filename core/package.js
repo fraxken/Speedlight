@@ -1,11 +1,11 @@
-const events    = require('events');
-const { each }  = require('async');
+const Emitter    = require('events');
+const { each }   = require('async');
 
 /*
  * Package class 
  * Middleware component with his own Context, Callback(s) and Package(s).
  */
-class Package extends events {
+class Package extends Emitter {
 
     constructor() {
         super();
