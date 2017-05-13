@@ -3,13 +3,8 @@ const { each }  = require('async');
 
 class Package extends events {
 
-    constructor(strName) {
+    constructor() {
         super();
-        if(typeof strName !== 'string') {
-            throw new TypeError("Invalid package name");
-        }
-        console.log(`Package created with name => ${strName}`);
-        this.name       = strName;
         this.context    = {};
         this.callbacks  = [];
         this.packages   = [];

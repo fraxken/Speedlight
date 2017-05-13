@@ -21,7 +21,7 @@ const IServerListen = {
 class Server extends Package {
 
     constructor() {
-        super("Speedlight-server");
+        super();
     }
 
     async _httpRequestHandler(request,response) {
