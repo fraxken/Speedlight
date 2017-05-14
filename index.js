@@ -29,7 +29,7 @@ class HttpServer extends Package {
     }
 
     async _httpRequestHandler(request,response) {
-        await this.run({ request, response },void 0);
+        await this.run(request,response,{});
         response.end(Buffer.from('Unmatched routes!'));
     }
 

@@ -38,13 +38,21 @@ class Package extends Emitter {
     }
 
     /*
+     * Unsafe use of package(s).
+     */
+    unsafe_usePackage(pkg) {
+        this.emit('use',pkg);
+        this._packages.push(pkg);
+    }
+
+    /*
      * execute package callback(s).
      */
-    async _executeCallbacks(ctx) {
+    async _executeCallbacks(request,response,context) {
         var i = 0,len = this._callbacks.length;
         for(;i<len;i++) {
             try {
-                await this._callbacks[i](ctx);
+                await this._callbacks[i](request,response,context);
             }
             catch(Exception) {
                 throw Exception;
@@ -55,10 +63,10 @@ class Package extends Emitter {
     /*
      * Run middleware execution for every package(s) attached.
      */
-    _runChildrenPackages(context) {
+    _runChildrenPackages(request,response,context) {
         return new Promise((resolve,reject) => {
             each(this._packages,(pkg,next) => {
-                pkg.run(void 0,context).then( next ).catch( err => {
+                pkg.run(request,response,context).then( next ).catch( err => {
                     next();
                 });
             },(err) => {
@@ -74,20 +82,13 @@ class Package extends Emitter {
     /*
      * Run middleware execution
      */
-    async run(middlewareContext,tContext) {
-        const selfCtx   = this.copyContext();
-        let reqContext  = tContext != void 0 ? Object.assign(tContext,selfCtx) : selfCtx;
+    async run(request,response,inheritContext) {
+        let scopeContext  = Object.assign(inheritContext,this.copyContext());
 
-        if(middlewareContext != void 0) {
-            Object.assign(reqContext,middlewareContext);
-        }
-
-        if(this._callbacks.length > 0) {
-            await this._executeCallbacks(reqContext);
-        }
-        if(this._packages.length > 0) {
-            await this._runChildrenPackages(reqContext);
-        }
+        if(this._callbacks.length > 0) 
+            await this._executeCallbacks(request,response,scopeContext);
+        if(this._packages.length > 0) 
+            await this._runChildrenPackages(request,response,scopeContext);
     }
 
 }
