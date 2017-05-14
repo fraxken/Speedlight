@@ -23,6 +23,7 @@ class HttpServer extends Package {
 
     constructor(opts) {
         super();
+        this.error404 = Buffer.from('ERROR 404 - PAGE NOT FOUND');
         if(opts != void 0) {
             this.listen(opts);
         }
@@ -30,7 +31,8 @@ class HttpServer extends Package {
 
     async _httpRequestHandler(request,response) {
         await this.run(request,response,{});
-        response.end(Buffer.from('Unmatched routes!'));
+        response.writeHead(404, {'Content-Type': 'text/plain'});
+        response.end(this.error404);
     }
 
     listen(opts) {
