@@ -49,7 +49,7 @@ class HttpServer extends Package {
 
 /*
  * WebSocket interface
- */
+ */    
 const IWSSConstructor = {
     port: void 0
 }

@@ -5,7 +5,7 @@ const { each }   = require('async');
  * Package class 
  * Middleware component with his own Context, Callback(s) and Package(s).
  */
-class Package extends Emitter {
+class Middleware extends Emitter {
 
     constructor() {
         super();
@@ -93,4 +93,4 @@ class Package extends Emitter {
 
 }
 
-module.exports = Package;
+module.exports = Middleware;
