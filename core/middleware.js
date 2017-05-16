@@ -9,9 +9,10 @@ class Middleware extends Emitter {
 
     constructor() {
         super();
-        this.context     = {};
-        this._callbacks  = [];
-        this._packages   = [];
+        this.context = {};
+        this._requestsHandler = [];
+        this._responseHandler = [];
+        this._middleware = [];
     }
 
     /*
@@ -22,37 +23,44 @@ class Middleware extends Emitter {
     }
 
     /*
-     * Use a new middleware element.
+     * Extend middleware
      */
-    use(objMiddleware) {
-        if(objMiddleware instanceof Package) {
-            this.emit('use',objMiddleware);
-            this._packages.push(objMiddleware);
+    extend(middleware) {
+        if(middleware instanceof Middleware === false) {
+            throw new TypeError("Not a middleware object!");
         }
-        else if(typeof objMiddleware === 'function') {
-            this._callbacks.push(objMiddleware);
-        }
-        else {
-            throw new TypeError("Unsupported middleware type for objMiddleware");
-        }
+        this.emit('use',middleware);
+        this._middleware.push(middleware);
     }
 
     /*
-     * Unsafe use of package(s).
+     * append new Request handler!
      */
-    unsafe_usePackage(pkg) {
-        this.emit('use',pkg);
-        this._packages.push(pkg);
+    appendRequestHandler(handler) {
+        if(typeof handler !== 'function') {
+            throw new TypeError("handler is not a function");
+        }
+        this._requestsHandler.push(handler);
+    }
+
+    /*
+     * append new Response handler!
+     */
+    appendResponseHandler(handler) {
+        if(typeof handler !== 'function') {
+            throw new TypeError("handler is not a function");
+        }
+        this._responseHandler.push(handler);
     }
 
     /*
      * execute package callback(s).
      */
-    async _executeCallbacks(request,response,context) {
-        var i = 0,len = this._callbacks.length;
+    async _assignRequestHandler(request,response,context) {
+        var i = 0,len = this._requestsHandler.length;
         for(;i<len;i++) {
             try {
-                await this._callbacks[i](request,response,context);
+                await this._requestsHandler[i](request,response,context);
             }
             catch(Exception) {
                 throw Exception;
@@ -63,10 +71,11 @@ class Middleware extends Emitter {
     /*
      * Run middleware execution for every package(s) attached.
      */
-    _runChildrenPackages(request,response,context) {
+    _executeChildrenMiddleware(request,response,context) {
         return new Promise((resolve,reject) => {
-            each(this._packages,(pkg,next) => {
-                pkg.run(request,response,context).then( next ).catch( err => {
+            each(this._middleware,(middleware,next) => {
+                middleware.run(request,response,context).then( next ).catch( err => {
+                    this.emit('error',err);
                     next();
                 });
             },(err) => {
@@ -76,7 +85,7 @@ class Middleware extends Emitter {
                 }
                 resolve();
             });
-        })
+        });
     }
 
     /*
@@ -85,10 +94,18 @@ class Middleware extends Emitter {
     async run(request,response,inheritContext) {
         let scopeContext  = Object.assign(inheritContext,this.copyContext());
 
-        if(this._callbacks.length > 0) 
-            await this._executeCallbacks(request,response,scopeContext);
-        if(this._packages.length > 0) 
-            await this._runChildrenPackages(request,response,scopeContext);
+        if(this._requestsHandler.length > 0) {
+            await this._assignRequestHandler(request,response,scopeContext);
+        }
+
+        if(this._responseHandler.length > 0) {
+            this._responseHandler.forEach( fn => response.on('finish',async () => {
+                await fn(scopeContext);
+            }));
+        }
+
+        if(this._middleware.length > 0) 
+            await this._executeChildrenMiddleware(request,response,scopeContext);
     }
 
 }

@@ -5,9 +5,9 @@ const Emitter   = require('events');
 const uws       = require('uws');
 
 // Internal modules
-const Utils     = require('./core/utils.js');
-const Package   = require('./core/package.js');
-const Router    = require('./core/router.js');
+const Utils         = require('./core/utils.js');
+const Middleware    = require('./core/middleware.js');
+const Router        = require('./core/router.js');
 
 /*
  * Server interfaces
@@ -19,7 +19,7 @@ const IHTTPServerListen = {
 /*
  * Server server
  */
-class HttpServer extends Package {
+class HttpServer extends Middleware {
 
     constructor(opts) {
         super();
@@ -30,19 +30,30 @@ class HttpServer extends Package {
     }
 
     async _httpRequestHandler(request,response) {
-        await this.run(request,response,{});
+        console.log(response);
+        try {
+            await this.run(request,response,{});
+        }
+        catch(Err) {
+            this.emit('error',Err);
+            response.writeHead(500, {'Content-Type': 'text/plain'});
+            response.end(Buffer.from('Internal server error!'));
+        }
         response.writeHead(404, {'Content-Type': 'text/plain'});
         response.end(this.error404);
     }
 
     listen(opts) {
-        if(this._httpServer !== undefined) return;
+        if(this._uws !== undefined) return;
         opts = Utils.assignInterface(opts,IHTTPServerListen);
         if(opts.port == void 0) {
             throw new Error("Please provide a port to start the Http server!");
         }
-        this._httpServer = uws.http.createServer( this._httpRequestHandler.bind(this) );
-        this._httpServer.listen(opts.port);
+        this._uws = uws.http.createServer( this._httpRequestHandler.bind(this) );
+        this._uws.listen(opts.port);
+        this._uws.on('error', (err) => {
+            this.emit('error',err);
+        });
     }
 
 }
@@ -83,6 +94,6 @@ class WebSocketServer extends Emitter {
  */ 
 module.exports = {
     HttpServer,
-    Package,
+    Middleware,
     Router
 }

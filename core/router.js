@@ -1,6 +1,6 @@
-const Package = require('./package.js');
+const Middleware = require('./middleware.js');
 
-class Router extends Package {
+class Router extends Middleware {
 
     constructor(strBasename) {
         super();
@@ -17,15 +17,16 @@ class Router extends Package {
         };
 
         this.on('use', (pkg) => pkg.setBase(this.basePath) );
-        this.use(async(ctx) => {
-            const url        = ctx.request.url;
-            const routingMap = this._routes[ctx.request.method];
+        this.appendRequestHandler(async(request,response,ctx) => {
+            const url        = request.url;
+            const routingMap = this._routes[request.method];
 
             if(routingMap.has(url)) {
                 try {
-                    await routingMap.get(url)(ctx);
+                    await routingMap.get(url)(request,response,ctx);
                 }
                 catch(Err) {
+                    console.log('err');
                     throw Err;
                 }
             }
@@ -40,21 +41,45 @@ class Router extends Package {
         this.basePath = strPath+this.basePath;
     }
 
-    handleMethod(strMethod,asyncMethod) {
+    get(...args) {
+        this.handleMethod('GET',...args);
+    }
+
+    post(...args) {
+        this.handleMethod('POST',...args);
+    }
+
+    handleMethod(strMethod,...arg) {
         if(Reflect.has(this._routes,strMethod) === false) {
             throw new Error('strMethod have to be equal to : GET|POST|PUT');
         }
-        if(asyncMethod === undefined) {
-            throw new Error('Invalid method');
+        let methodName;
+        let methodFN;
+
+        if(arg.length === 1 && typeof arg[0] === 'function') {
+            methodName  = arg[0].name;
+            methodFN    = arg[0];
         }
+        else if(arg.length === 2 && typeof arg[0] === 'string' && typeof arg[1] === 'function') {
+            methodName  = arg[0];
+            methodFN    = arg[1];
+        }
+        else {
+            throw new TypeError("Invalid handleMethod argument!");
+        }
+
+        if(methodName[0] === '/') {
+            methodName = methodName.substr(1);
+        }
+        
         process.nextTick(() => {
             let tBasePath = this.basePath;
             if(tBasePath[tBasePath.length - 1] !== '/') {
                 tBasePath = tBasePath+'/';
             }
-            const methodURI = tBasePath+asyncMethod.name;
+            const methodURI = tBasePath+methodName;
             console.log(`Declare new route => ${methodURI}`);
-            this._routes[strMethod].set(methodURI,asyncMethod);
+            this._routes[strMethod].set(methodURI,methodFN);
         });
     }
 
