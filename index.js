@@ -1,8 +1,9 @@
 // NodeJS - Core modules
-const Emitter   = require('events');
+const Emitter       = require('events');
 
 // Dependencies modules
-const uws       = require('uws');
+const uws           = require('uws');
+const http          = require('http');
 
 // Internal modules
 const Utils         = require('./core/utils.js');
@@ -13,7 +14,8 @@ const Router        = require('./core/router.js');
  * Server interfaces
  */ 
 const IHTTPServerListen = {
-    port: void 0
+    port: void 0,
+    native: false
 }
 
 /*
@@ -49,10 +51,13 @@ class HttpServer extends Middleware {
         if(opts.port == void 0) {
             throw new Error("Please provide a port to start the Http server!");
         }
-        this._uws = uws.http.createServer( this._httpRequestHandler.bind(this) );
-        this._uws.listen(opts.port);
-        this._uws.on('error', (err) => {
-            this.emit('error',err);
+        process.nextTick( () => {
+            const httpServer = opts.native === true ? http : uws.http;
+            this._uws = httpServer.createServer( this._httpRequestHandler.bind(this) );
+            this._uws.listen(opts.port);
+            this._uws.on('error', (err) => {
+                this.emit('error',err);
+            });
         });
     }
 
